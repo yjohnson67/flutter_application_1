@@ -34,11 +34,12 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  flame: ^1.35.1
+  webview_flutter: ^4.13.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  webview_flutter: ^4.0.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -59,9 +60,15 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/images/background.png
+    - assets/images/stars.png
+    - assets/images/ground.png
+    - assets/images/planet1.png
+    - assets/images/planet2.png
+    - assets/images/moon.png
+    - assets/images/rocket_white.png
+    - assets/images/ui_box.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
