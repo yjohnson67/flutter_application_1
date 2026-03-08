@@ -4,13 +4,13 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
- 
+
 class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
   RocketGame({
     required this.playerName,
     required this.favoriteColor,
   });
- 
+
   final String playerName;
   final Color favoriteColor;
 
@@ -21,7 +21,7 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
   late final TextComponent scoreText;
 
   final Random random = Random();
- 
+
   double obstacleTimer = 0;
   double score = 0;
   bool isLaunched = false;
@@ -37,15 +37,16 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
       'planet1.png',
       'planet2.png',
       'moon.png',
+      'ui_box.png',
     ]);
- 
+
     background = SpriteComponent(
       sprite: Sprite(images.fromCache('background.png')),
       size: size,
       position: Vector2.zero(),
     );
     add(background);
- 
+
     stars = SpriteComponent(
       sprite: Sprite(images.fromCache('stars.png')),
       size: size,
@@ -53,14 +54,14 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
     );
     add(stars);
 
-     ground = SpriteComponent(
+    ground = SpriteComponent(
       sprite: Sprite(images.fromCache('ground.png')),
       size: Vector2(size.x, size.y * 0.18),
       position: Vector2(0, size.y - (size.y * 0.18)),
     );
     add(ground);
 
-     rocket = Rocket(
+    rocket = Rocket(
       sprite: Sprite(images.fromCache('rocket_white.png')),
       tintColor: favoriteColor,
     )
@@ -68,9 +69,9 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
       ..anchor = Anchor.center
       ..position = Vector2(size.x / 2, size.y - (ground.size.y + 70));
 
-     add(rocket);
+    add(rocket);
 
-     scoreText = TextComponent(
+    scoreText = TextComponent(
       text: 'Score: 0',
       position: Vector2(16, 16),
       anchor: Anchor.topLeft,
@@ -83,32 +84,33 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
       ),
     );
     add(scoreText);
+
   }
- 
+
   @override
   void update(double dt) {
     super.update(dt);
 
-     if (isGameOver) return;
+    if (isGameOver) return;
 
-     if (isLaunched) {
+    if (isLaunched) {
       score += dt * 10;
       scoreText.text = 'Score: ${score.toInt()}';
 
-       obstacleTimer += dt;
+      obstacleTimer += dt;
 
-       if (obstacleTimer > 1.2) {
+      if (obstacleTimer > 1.2) {
         spawnObstacle();
         obstacleTimer = 0;
       }
     }
   }
- 
+
   void spawnObstacle() {
     final obstacleImages = ['planet1.png', 'planet2.png', 'moon.png'];
     final imageName = obstacleImages[random.nextInt(obstacleImages.length)];
 
-     final obstacle = FallingObstacle(
+    final obstacle = FallingObstacle(
       sprite: Sprite(images.fromCache(imageName)),
     )
       ..size = Vector2(72, 72)
@@ -116,124 +118,223 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
         random.nextDouble() * (size.x - 72),
         -80,
       );
-     add(obstacle);
+
+    add(obstacle);
   }
- 
+
   @override
+
   void onDragUpdate(DragUpdateEvent event) {
     if (isGameOver) return;
 
-     rocket.position.x += event.localDelta.x;
+    rocket.position.x += event.localDelta.x;
 
-     rocket.position.x = rocket.position.x.clamp(
+    rocket.position.x = rocket.position.x.clamp(
       rocket.size.x / 2,
       size.x - rocket.size.x / 2,
     );
- 
+
     if (!isLaunched) {
       isLaunched = true;
       ground.removeFromParent();
     }
   }
- 
-  void gameOver() {
 
+  void gameOver() {
     if (isGameOver) return;
 
-     isGameOver = true;
+    isGameOver = true;
 
-     add(
-      TextComponent(
-        text: 'GAME OVER',
-        position: Vector2(size.x / 2, size.y / 2 - 40),
-        anchor: Anchor.center,
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            color: Colors.red,
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
- 
     add(
-      TextComponent(
-        text: 'Final Score: ${score.toInt()}',
-        position: Vector2(size.x / 2, size.y / 2 + 10),
-        anchor: Anchor.center,
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      GameOverPanel(
+        finalScore: score.toInt(),
+        onRestart: resetGame,
+      )
+        ..position = Vector2(size.x / 2, size.y / 2)
+        ..anchor = Anchor.center,
     );
   }
+
+  void resetGame() {
+    isGameOver = false;
+    isLaunched = false;
+    score = 0;
+    obstacleTimer = 0;
+    scoreText.text = 'Score: 0';
+
+    children.whereType<FallingObstacle>().toList().forEach((o) => o.removeFromParent());
+    children.whereType<GameOverPanel>().toList().forEach((p) => p.removeFromParent());
+
+    if (ground.parent == null) {
+      add(ground);
+    }
+
+    rocket.position = Vector2(size.x / 2, size.y - (ground.size.y + 70));
+  }
 }
- 
+
 class Rocket extends SpriteComponent with CollisionCallbacks {
   Rocket({
     required super.sprite,
     required this.tintColor,
   });
- 
+
   final Color tintColor;
 
-   @override
+  @override
   Future<void> onLoad() async {
     add(RectangleHitbox());
   }
- 
+
   @override
   void render(Canvas canvas) {
     final paint = Paint()
       ..colorFilter = ColorFilter.mode(tintColor, BlendMode.srcIn);
 
-     sprite?.render(
+    sprite?.render(
       canvas,
       size: size,
       overridePaint: paint,
     );
   }
- 
+
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
 
-     if (other is FallingObstacle) {
+    if (other is FallingObstacle) {
       final game = findGame() as RocketGame?;
       game?.gameOver();
     }
   }
 }
 
- class FallingObstacle extends SpriteComponent with CollisionCallbacks {
+class FallingObstacle extends SpriteComponent with CollisionCallbacks {
   FallingObstacle({
     required super.sprite,
   });
- 
+
   @override
   Future<void> onLoad() async {
     add(RectangleHitbox());
   }
- 
+
   @override
   void update(double dt) {
     super.update(dt);
 
-     final game = findGame() as RocketGame?;
+    final game = findGame() as RocketGame?;
     if (game == null) return;
     if (game.isGameOver) return;
 
-     position.y += 220 * dt;
+    position.y += 220 * dt;
 
-     if (position.y > game.size.y + 100) {
+    if (position.y > game.size.y + 100) {
       removeFromParent();
     }
   }
 }
- 
+
+class GameOverPanel extends PositionComponent with TapCallbacks {
+  GameOverPanel({
+    required this.finalScore,
+    required this.onRestart,
+  });
+
+  final int finalScore;
+  final VoidCallback onRestart;
+
+  late final SpriteComponent panelBox;
+
+  @override
+  Future<void> onLoad() async {
+    final game = findGame() as RocketGame;
+
+    size = Vector2(280, 220);
+
+    panelBox = SpriteComponent(
+      sprite: Sprite(game.images.fromCache('ui_box.png')),
+      size: size,
+      position: Vector2.zero(),
+    );
+    add(panelBox);
+
+    add(
+      TextComponent(
+        text: 'GAME OVER',
+        position: Vector2(size.x / 2, 50),
+        anchor: Anchor.center,
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            color: Colors.red,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+
+    add(
+      TextComponent(
+        text: 'Final Score: $finalScore',
+        position: Vector2(size.x / 2, 95),
+        anchor: Anchor.center,
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+
+    add(
+      RestartButton(onPressed: onRestart)
+        ..position = Vector2(size.x / 2, 155)
+        ..anchor = Anchor.center,
+    );
+  }
+}
+
+class RestartButton extends PositionComponent with TapCallbacks {
+  RestartButton({
+    required this.onPressed,
+  });
+
+  final VoidCallback onPressed;
+
+  @override
+  Future<void> onLoad() async {
+    size = Vector2(140, 44);
+
+    add(
+      RectangleComponent(
+        size: size,
+        paint: Paint()..color = Colors.blueAccent,
+      ),
+    );
+
+    add(
+      TextComponent(
+        text: 'Restart',
+        position: size / 2,
+        anchor: Anchor.center,
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    onPressed();
+    removeFromParent();
+  }
+}
  
