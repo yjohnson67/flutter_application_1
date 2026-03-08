@@ -20,10 +20,10 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
   late final Rocket rocket;
   late final TextComponent scoreText;
 
-   final Random random = Random();
+  final Random random = Random();
  
   double obstacleTimer = 0;
-  int score = 0;
+  double score = 0;
   bool isLaunched = false;
   bool isGameOver = false;
 
@@ -92,8 +92,8 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
      if (isGameOver) return;
 
      if (isLaunched) {
-      score += (dt * 10).toInt();
-      scoreText.text = 'Score: $score';
+      score += dt * 10;
+      scoreText.text = 'Score: ${score.toInt()}';
 
        obstacleTimer += dt;
 
@@ -159,7 +159,7 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
  
     add(
       TextComponent(
-        text: 'Final Score: $score',
+        text: 'Final Score: ${score.toInt()}',
         position: Vector2(size.x / 2, size.y / 2 + 10),
         anchor: Anchor.center,
         textRenderer: TextPaint(
