@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
   RocketGame({
@@ -26,6 +28,7 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
   double score = 0;
   bool isLaunched = false;
   bool isGameOver = false;
+  bool isSavingScore = false;
 
   @override
   Future<void> onLoad() async {
@@ -84,7 +87,6 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
       ),
     );
     add(scoreText);
-
   }
 
   @override
@@ -123,7 +125,6 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
   }
 
   @override
-
   void onDragUpdate(DragUpdateEvent event) {
     if (isGameOver) return;
 
@@ -140,14 +141,49 @@ class RocketGame extends FlameGame with DragCallbacks, HasCollisionDetection {
     }
   }
 
+  Future<void> saveScoreToDjango(int finalScore) async {
+    if (isSavingScore) return;
+    isSavingScore = true;
+
+    const String url = 'http://10.0.2.2:8000/save-test-score/';
+
+    final payload = {
+      'player_name': playerName,
+      'rocket_color': '#${favoriteColor.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}',
+      'score': finalScore,
+    };
+
+    try {
+      debugPrint('Sending score to Django...');
+      debugPrint('POST $url');
+      debugPrint('Payload: $payload');
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
+
+      debugPrint('Save response status: ${response.statusCode}');
+      debugPrint('Save response body: ${response.body}');
+    } catch (e) {
+      debugPrint('Error saving score: $e');
+    } finally {
+      isSavingScore = false;
+    }
+  }
+
   void gameOver() {
     if (isGameOver) return;
 
     isGameOver = true;
+    final int finalScore = score.toInt();
+
+    saveScoreToDjango(finalScore);
 
     add(
       GameOverPanel(
-        finalScore: score.toInt(),
+        finalScore: finalScore,
         onRestart: resetGame,
       )
         ..position = Vector2(size.x / 2, size.y / 2)
@@ -337,4 +373,3 @@ class RestartButton extends PositionComponent with TapCallbacks {
     removeFromParent();
   }
 }
- 
