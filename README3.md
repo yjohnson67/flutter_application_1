@@ -25,7 +25,7 @@ Database systems (MongoDB)
 Data visualization (Matplotlib)
 🎥 Demo Video
 
-https://youtu.be/SLYthgCkcqY
+https://youtu.be/SpoV1vwDvKY 
 
 🛠️ Instructions for Build and Use
 Steps to Build and Run the Software
@@ -69,7 +69,7 @@ const String baseUrl = 'http://10.0.2.2:8000';
 
 For deployed version:
 
-const String baseUrl = 'https://your-render-site.onrender.com';
+const String baseUrl = 'https://gettingtoknowyou.onrender.com';
 🎮 Instructions for Using the Software
 Game Flow
 Launch the mobile app.
