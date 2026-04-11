@@ -32,7 +32,7 @@ class _AppShellState extends State<AppShell> {
           });
         },
       )
-      ..loadRequest(Uri.parse('https://hello-sbre.onrender.com'));
+      ..loadRequest(Uri.parse('https://gettingtoknowyou.onrender.com'));
   }
 
   Color _hexToColor(String hex) {
